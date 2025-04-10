@@ -5,9 +5,9 @@ echo y | sudo apt install build-essential
 echo y | sudo apt install cmake
 echo y | sudo apt install uuid-dev
 echo y | sudo apt install make
-echo y | sudo apt install nasm
 echo y | sudo apt install g++
 echo y | sudo apt install git
+
 
 # idxd-config
 ROOT=$(pwd)
@@ -17,3 +17,18 @@ git submodule update --init .
 ./configure CFLAGS='-g -O2' --disable-logging --prefix=${PWD}/install --sysconfdir=/etc --libdir=${PWD}/install/lib64 --enable-test=yes
 make -j
 sudo make install -j
+
+# ippcp
+cd $ROOT/third-party/
+wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.02/nasm-2.16.02.tar.gz
+tar -xvzf nasm-2.16.02.tar.gz
+cd nasm-2.16.02
+./configure
+make -j
+sudo make install -j
+
+cd $ROOT/third-party/ipp-crypto
+git submodule update --init --recursive .
+ASM_NASM=/usr/local/bin/nasm cmake CMakeLists.txt -B_build -DARCH=intel64 -DCMAKE_BUILD_TYPE=Release
+cd _build/
+make -j $(( $(nproc) / 2 ))
