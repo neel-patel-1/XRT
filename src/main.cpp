@@ -21,7 +21,7 @@
 #include "iaa_offloads.h"
 #include "dsa_offloads.h"
 
-#include "proto_files/router.pb.h"
+#include "src/protobuf/generated/src/protobuf/router.pb.h"
 #include "gpcore_compress.h"
 #include "lzdatagen.h"
 #include "ch3_hash.h"
