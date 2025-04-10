@@ -21,37 +21,37 @@ def run_cmd(cmd, args=[''], is_root=False):
 
 
 def accel_get_active_dvices():
-    ret, out, err = run_cmd(cmd="./idxd-config/install/bin/accel-config", args=["list"])
+    ret, out, err = run_cmd(cmd="./third-party/idxd-config/install/bin/accel-config", args=["list"])
     if ret:
         return [ret, err, out]
     else:
         return [ret, err, json.loads(out)]
 
 def accel_get_all_dvices():
-    ret, out, err = run_cmd(cmd="./idxd-config/install/bin/accel-config", args=["list", "-i"])
+    ret, out, err = run_cmd(cmd="./third-party/idxd-config/install/bin/accel-config", args=["list", "-i"])
     if ret:
         return [ret, err, out]
     else:
         return [ret, err, json.loads(out)]
 
 def accel_load_config(config_file, is_root=False):
-    ret, out, err = run_cmd(cmd="./idxd-config/install/bin/accel-config", args=["load-config", "-v", "-c", config_file], is_root=is_root)
+    ret, out, err = run_cmd(cmd="./third-party/idxd-config/install/bin/accel-config", args=["load-config", "-v", "-c", config_file], is_root=is_root)
     return [ret, err, out]
 
 def accel_disable_device(device, is_root=False):
-    ret, out, err = run_cmd(cmd="./idxd-config/install/bin/accel-config", args=["disable-device", "-v", device], is_root=is_root)
+    ret, out, err = run_cmd(cmd="./third-party/idxd-config/install/bin/accel-config", args=["disable-device", "-v", device], is_root=is_root)
     return [ret, err, out]
 
 def accel_enable_device(device, is_root=False):
-    ret, out, err = run_cmd(cmd="./idxd-config/install/bin/accel-config", args=["enable-device", "-v", device], is_root=is_root)
+    ret, out, err = run_cmd(cmd="./third-party/idxd-config/install/bin/accel-config", args=["enable-device", "-v", device], is_root=is_root)
     return [ret, err, out]
 
 def accel_enable_wq(device, wq, is_root=False):
-    ret, out, err = run_cmd(cmd="./idxd-config/install/bin/accel-config", args=["enable-wq", "-v", device + "/" + wq], is_root=is_root)
+    ret, out, err = run_cmd(cmd="./third-party/idxd-config/install/bin/accel-config", args=["enable-wq", "-v", device + "/" + wq], is_root=is_root)
     return [ret, err, out]
 
 def accel_set_block_on_fault(device, wq, bof_flag, is_root=False):
-    ret, out, err = run_cmd(cmd="./idxd-config/install/bin/accel-config", args=["config-wq", device + "/" + wq, "-b", str(int(bof_flag))], is_root=is_root)
+    ret, out, err = run_cmd(cmd="./third-party/idxd-config/install/bin/accel-config", args=["config-wq", device + "/" + wq, "-b", str(int(bof_flag))], is_root=is_root)
     return [ret, err, out]
 
 
