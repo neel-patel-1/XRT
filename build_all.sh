@@ -7,6 +7,9 @@ echo y | sudo apt install uuid-dev
 echo y | sudo apt install make
 echo y | sudo apt install g++
 echo y | sudo apt install git
+echo y | sudo apt install libboost-all-dev
+echo y | sudo apt install asciidoc
+echo y | sudo apt install libjson-c-dev
 
 
 # idxd-config
@@ -19,7 +22,7 @@ make -j
 sudo make install -j
 
 # ippcp
-sudo apt remove nasm
+#sudo apt remove nasm
 cd $ROOT/third-party/
 wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.02/nasm-2.16.02.tar.gz
 tar -xvzf nasm-2.16.02.tar.gz

@@ -39,7 +39,6 @@
 #define IAA_START 5
 #define IDXD_DEV_STEP 2
 #define DISPATCH_RING_SIZE 4096
-#define REQ_SIZE 128
 #define INQ_SIZE 4096
 #define MAX_SER_OVERHEAD_BYTES 128
 #define STACK_SIZE (128 * 1024)
@@ -95,26 +94,20 @@ typedef enum worker_type_ {
   WORKER_RR_SW_FALLBACK
 } worker_type_t;
 typedef struct job_info {
-  job_type_t jtype;
-  status s;
-  void *args;
-  idxd_comp *comp;
-  uint64_t failed_enq;
+    job_type_t jtype;
+    status s;
+    void *args;
+    idxd_comp *comp;
+    uint64_t failed_enq;
 } job_info_t;
 
-#pragma pack(push, 1)
-struct req_hdr {
+typedef struct req_hdr {
   uint64_t id;
   job_type req_type;
   void *w_args;
   #ifdef LATENCY
   bool tagged;
   uint64_t arrival;
-  uint64_t completed;
-  int num_services;
-  #if defined(LOST_ENQ_TIME) || defined(COUNT_LOST_ENQ)
-  uint64_t failed_enqs;
-  #endif
   uint64_t injected;
   uint64_t dispatched;
   uint64_t first_served;
@@ -122,22 +115,14 @@ struct req_hdr {
   uint64_t resumed1;
   uint64_t resumed2;
   uint64_t postfn_completed;
-
-  uint64_t unloaded; // it will be cached in the workload gen here
-  #endif
-
-  char padding[REQ_SIZE - sizeof(uint64_t) - sizeof(job_type) - sizeof(void*)
-  #ifdef LATENCY
-  - sizeof(bool) - 10 * sizeof(uint64_t) - sizeof(int)
+  int num_services;
+  uint64_t completed;
+  uint64_t unloaded;
   #endif
   #if defined(LOST_ENQ_TIME) || defined(COUNT_LOST_ENQ)
-  - sizeof(uint64_t)
+  uint64_t failed_enqs;
   #endif
-  ];
-}__attribute__((aligned(REQ_SIZE)));
-#pragma pack(pop)
-
-typedef struct req_hdr hdr; // total no latency -- 128 bytes
+} hdr; // total no latency -- 20
 typedef struct coro_info {
   coro_t::pull_type *coro;
   coro_t::push_type *yield;
@@ -2382,16 +2367,8 @@ static __always_inline void memcpy_gather_yielding_rr(job_info_t *jinfo, coro_t:
   start = fenced_rdtscp();
   #endif
 
-  #ifdef LOST_ENQ_TIME
-  start = fenced_rdtscp();
-  #endif
-
   while(enqcmd((void *)((char *)(m_dsa->wq_reg) + p_off), desc) ){
   }
-
-  #ifdef LOST_ENQ_TIME
-  jinfo->failed_enq = (fenced_rdtscp() - start);
-  #endif
 
   #ifdef LOST_ENQ_TIME
   jinfo->failed_enq = (fenced_rdtscp() - start);
@@ -2413,7 +2390,8 @@ static __always_inline void memcpy_gather_yielding_rr(job_info_t *jinfo, coro_t:
 #endif
 
   /* spin for t microseconds */
-  chase_pointers((void **)d_buf, d_sz/64);
+  start_cycle = rdtsc();
+  while(rdtsc() - start_cycle < spin_cycles){}
 
 #ifdef EXETIME
   ts4 = rdtsc();
@@ -3469,14 +3447,14 @@ void *workload_gen(void *arg){
     starts = (uint64_t *)malloc(num_reqs * sizeof(uint64_t));
     ends = (uint64_t *)malloc(num_reqs * sizeof(uint64_t));
     for(int i=0; i<num_reqs; i++){
-      start = fenced_rdtscp();
+      start = rdtsc();
       job_info.args = arg_list[i];
       job_info.jtype = job_list[i];
-      job_info.s = INIT;
       while(job_info.s != COMPLETED){
         (*(coro_info.coro))();
       }
-      end = fenced_rdtscp();
+      (*coro_info.coro)();
+      end = rdtsc();
       hdrs[i].unloaded = end - start;
       starts[i] = start;
       ends[i] = end;
@@ -4616,8 +4594,6 @@ void *monitor(void *arg){
 
   PRINT("[Monitor %d] Average Slowdown: %f\n", args->id, avg_slowdown);
   PRINT("[Monitor %d] 99.9th Percentile Slowdown: %f\n", args->id, p99_slowdown);
-  double median_slowdown = calculate_percentile_double(slowdowns, 0.5);
-  PRINT("[Monitor %d] Median Slowdown: %f\n", args->id, median_slowdown);
 
   PRINT("[Monitor %d] Load Distribution:\n", args->id);
   for (int i = 0; i < num_workers; i++) {
@@ -4647,7 +4623,7 @@ int gLogLevel = LOG_DEBUG;
 bool gDebugParam = false;
 int main(int argc, char **argv){
   int num_iaas = 2;
-  int num_dsas = 2;
+  int num_dsas = 1;
   int num_reqs = 15000000;
   int num_workers = 4;
   int coros_per_worker = 4;
@@ -4784,7 +4760,7 @@ int main(int argc, char **argv){
   }
   add_base_addr(stack_nm, (void **)&cr_pool);
 
-  PRINT("Request Size: %ld\n", sizeof(hdr));
+
 
   pthread_barrier_init(exit_barrier, NULL, 3);
   pthread_barrier_init(start_barrier, NULL, num_workers + 3);
