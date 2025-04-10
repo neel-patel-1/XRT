@@ -41,7 +41,7 @@ extern int gLogLevel;
 #define PRINT_DBG(args...)                                                     \
     do                                                                         \
     {                                                                          \
-        if (true == gDebugParam)                                           \
+        if (gLogLevel >= LOG_DEBUG)                                           \
         {                                                                      \
             printf("%s(): ", __func__);                                        \
             printf(args);                                                      \
