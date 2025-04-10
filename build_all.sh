@@ -19,6 +19,7 @@ make -j
 sudo make install -j
 
 # ippcp
+sudo apt remove nasm
 cd $ROOT/third-party/
 wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.02/nasm-2.16.02.tar.gz
 tar -xvzf nasm-2.16.02.tar.gz
