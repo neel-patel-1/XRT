@@ -1,6 +1,7 @@
 obj/*.o
 obj/kernels/*.a
 src/protobuf/generated/*
+logs/*
 main_xrt
 main_xrt-2500DDH-0DMDP-0DG-0MG-0UFH-0MMP-Yield-25w-128c-3dist-1024-1048576bimodal-1type-0.01.txt
 main_xrt-2500DDH-0DMDP-0DG-0MG-0UFH-0MMP-Yield-25w-128c-3dist-1024-1048576bimodal-2type-0.01.txt
