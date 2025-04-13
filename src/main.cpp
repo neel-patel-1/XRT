@@ -266,10 +266,6 @@ int main(int argc, char **argv){
   cpu_pin(3);
 
 
-#ifdef THROUGHPUT
-for(int j=0; j<iter; j++){
-  start = rdtsc();
-#endif
 
   flush_range((void *)dsts, IAA_DECOMPRESS_MAX_DEST_SIZE * total_requests); /* flush decrypt dsts */
   for(int i=0; i<IAA_DECOMPRESS_MAX_DEST_SIZE * total_requests; i+=4096){
@@ -400,18 +396,6 @@ for(int j=0; j<iter; j++){
     dotprod_array_end[i] = end;
     #endif
   }
-#ifdef THROUGHPUT
-  end = rdtsc();
-  start_times[j] = start;
-  end_times[j] = end;
-}
-uint64_t exe_time_diffs[iter];
-uint64_t exe_times_avg;
-avg_samples_from_arrays(exe_time_diffs, exe_times_avg, end_times, start_times, iter);
-PRINT("%lu ", buf_size);
-mean_median_stdev_rps(exe_time_diffs, iter, total_requests, " RPS");
-
-#endif
 
   #ifdef EXETIME
   uint64_t PreProcAvg;

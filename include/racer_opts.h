@@ -9,6 +9,7 @@ extern uint64_t total_requests;
 extern uint64_t buf_size;
 extern uint64_t iter;
 extern int gLogLevel;
+extern int workload_id;
 extern bool noAcc;
 
 int get_opts(int argc, char **argv);

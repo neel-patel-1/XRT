@@ -6,6 +6,8 @@ bool sync_demote = false;
 
 bool sync_prefetch = false;
 
+int workload_id = 0;
+
 
 uint64_t total_requests = 100;
 uint64_t buf_size = 1024;
@@ -19,8 +21,12 @@ bool noAcc = false;
 int get_opts(int argc, char **argv){
   int opt;
   gLogLevel = LOG_DEBUG;
-  while((opt = getopt(argc, argv, "s:nl:t:b:p:i:g")) != -1){
+  while((opt = getopt(argc, argv, "s:nl:t:b:p:i:gw:")) != -1){
     switch(opt){
+      case 'w':
+        workload_id = atoi(optarg);
+        LOG_PRINT(LOG_DEBUG, "Workload ID: %d\n", workload_id);
+        break;
       case 's':
         if(atoi(optarg) == 0){
           LOG_PRINT(LOG_DEBUG, "Sync demote\n");
