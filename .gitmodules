@@ -1,0 +1,6 @@
+[submodule "third-party/idxd-config"]
+	path = third-party/idxd-config
+	url = https://github.com/intel/idxd-config.git
+[submodule "third-party/ipp-crypto"]
+	path = third-party/ipp-crypto
+	url = https://github.com/intel/ipp-crypto.git

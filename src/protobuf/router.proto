@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package router;
+
+message RouterRequest {
+    string key = 1;
+    bytes value = 2;
+    uint32 operation = 3;
+}

@@ -1,0 +1,15 @@
+obj/*.o
+obj/kernels/*.a
+src/protobuf/generated/*
+main_xrt
+main_xrt-2500DDH-0DMDP-0DG-0MG-0UFH-0MMP-Yield-25w-128c-3dist-1024-1048576bimodal-1type-0.01.txt
+main_xrt-2500DDH-0DMDP-0DG-0MG-0UFH-0MMP-Yield-25w-128c-3dist-1024-1048576bimodal-2type-0.01.txt
+main_xrt-2500DDH-0DMDP-0DG-0MG-0UFH-0MMP-Yield-25w-128c-3dist-1024-1048576bimodal-3type-0.01.txt
+main_xrt-2500DDH-0DMDP-0DG-0MG-0UFH-0MMP-Yield-25w-128c-3dist-1024-1048576bimodal-4type-0.01.txt
+main_xrt-2500DDH-0DMDP-0DG-0MG-0UFH-0MMP-Yield-25w-128c-3dist-1024-1048576bimodal-5type-0.01.txt
+main_xrt-DDHYield-25w-4c-2.3.txt
+main_xrt-DDHYield-25w-4c-2.5.txt
+third-party/nasm-2.16.02.tar.gz
+third-party/nasm-2.16.02.tar.gz.1
+third-party/nasm-2.16.02/
+
