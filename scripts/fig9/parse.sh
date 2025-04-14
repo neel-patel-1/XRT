@@ -2,7 +2,7 @@
 SIZES=( 256 1024 4096 16384 $(( 64 * 1024 )) $(( 256 * 1024 )) $(( 1024 * 1024 )) )
 configs=( "noacc" "dummy" "syncdemote" "syncpref" "syncboth" )
 
-BINS=( "./mg" "./ddh" "./ufh" "./mmp" )
+BINS=( "./dmd" "./ddh" "./mg" "./ddh" "./ufh" "./mmp" )
 
 for bin in "${BINS[@]}"; do
   prefix="logs/$(basename $bin)"
