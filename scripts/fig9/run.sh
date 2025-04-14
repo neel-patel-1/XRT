@@ -3,7 +3,7 @@
 SIZES=( 256 1024 4096 16384 $(( 64 * 1024 )) $(( 256 * 1024 )) $(( 1024 * 1024 )) )
 reqs=100
 
-BINS=( "./ufh" "./mmp" )
+BINS=( "./ddh" "./mg" "./ddh" "./ufh" "./mmp" )
 
 for bin in ${BINS[@]}; do
   make $bin CXXFLAGS="-O3 -DEXETIME"  -j
