@@ -22,13 +22,13 @@ src/protobuf/generated/src/protobuf/router.pb.h: src/protobuf/router.proto
 src/protobuf/generated/src/protobuf/router.pb.cc: src/protobuf/router.proto
 	protoc --cpp_out=./src/protobuf/generated $<
 
-
+idxd_objs: obj/iaa_offloads.o obj/dsa_offloads.o
 
 # Fig 3
 src/XMPPass/build/XMPPass.so: src/XMPPass/XMPPass.cpp
 	mkdir -p src/XMPPass/build
 	cd src/XMPPass/build && cmake -DLLVM_DIR=$(LLVM_DIR) .. && make
-exe_time: src/baseline.cpp
+exe_time: src/baseline.cpp $(idxd_objs) obj/router.pb.o
 	$(CXX) -std=c++17 -march=native -O3 -o $@ $^ -DEXETIME $(INCLUDES)  -fpermissive
 
 # Fig 9
