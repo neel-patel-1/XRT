@@ -26,6 +26,16 @@ extern "C" {
   #include "accel_test.h"
 }
 
+#define COMP_STATUS_COMPLETED 1
+#define COMP_STATUS_PENDING 0
+#define REQUEST_STATUS_NONE -1
+#define REQUEST_COMPLETED COMP_STATUS_COMPLETED
+#define REQUEST_PREEMPTED COMP_STATUS_PENDING
+#define REQUEST_YIELDED 2
+typedef struct _request_return_args{
+  int status;
+} request_return_args_t;
+
 #define L1_SIZE 48 * 1024
 #define L3_SIZE 75 * 1024 * 1024
 #define GB_SIZE 1024 * 1024 * 1024
@@ -199,7 +209,7 @@ typedef struct antagonist_args {
 __thread fcontext_transfer_t scheduler_xfer;
 __thread volatile uint8_t *preempt_signal;
 __thread request_return_args_t ret_args;
-IppsAES_GCMState *pState = NULL;
+__thread IppsAES_GCMState *pState = NULL;
 
 void
 flush_range(void *start, size_t len)
