@@ -1,12 +1,14 @@
 #include "numa_mem.h"
 #include "payload_gen.h"
 #include "print_utils.h"
+#include "timer_utils.h"
 #include "stats.h"
 #include <x86intrin.h>
 #include <immintrin.h>
 #include <sched.h>
 #include <sys/sysinfo.h>
 #include "src/protobuf/generated/src/protobuf/router.pb.h"
+#include "sequential_writer.h"
 #include "ch3_hash.h"
 #include "gather.h"
 #include "pointer_chase.h"
@@ -20,11 +22,13 @@
 #include "dotproduct.h"
 #include "test.h"
 #include "gather.h"
+#include <cmath>
 extern "C" {
   #include "fcontext.h"
   #include "idxd.h"
   #include "accel_test.h"
 }
+#include <type_traits>
 
 #define COMP_STATUS_COMPLETED 1
 #define COMP_STATUS_PENDING 0
@@ -45,7 +49,8 @@ constexpr uint64_t buf_4gb_size = 4294967296;
 
 #define VECTOR_LOAD(x) _mm512_load_pd((void *)x);
 
-#define READ_ONCE(x) (*(volatile typeof(x) *)&(x))
+#define READ_ONCE(x) \
+  (*reinterpret_cast<volatile std::remove_reference_t<decltype(x)>*>(&(x)))
 #define MAX_SER_OVERHEAD_BYTES 64
 
 typedef struct completion_record idxd_comp;
