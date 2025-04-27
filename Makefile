@@ -28,6 +28,8 @@ src/protobuf/generated/src/protobuf/router.pb.cc: src/protobuf/router.proto
 src/XMPPass/build/XMPPass.so: src/XMPPass/XMPPass.cpp
 	mkdir -p src/XMPPass/build
 	cd src/XMPPass/build && cmake -DLLVM_DIR=$(LLVM_DIR) .. && make
+exe_time: src/baseline.cpp
+	$(CXX) -std=c++17 -march=native -O3 -o $@ $^ -DEXETIME $(INCLUDES)  -fpermissive
 
 # Fig 9
 mmp: src/mmp.cpp obj/racer_opts.o obj/iaa_offloads.o obj/dsa_offloads.o obj/lzdatagen.o obj/pcg_basic.o  obj/pointer_chase.o src/protobuf/generated/src/protobuf/router.pb.h obj/router.pb.o obj/payload_gen.o obj/thread_utils.o obj/numa_mem.o obj/kernels/ch3_hash.a obj/kernels/dotproduct.a obj/kernels/gather.a obj/kernels/matmul_histogram.a obj/stats.o
