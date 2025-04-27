@@ -14,3 +14,12 @@ third-party/nasm-2.16.02.tar.gz
 third-party/nasm-2.16.02.tar.gz.1
 third-party/nasm-2.16.02/
 
+ddh
+dmd
+main
+mg
+mmp
+ufh
+
+src/XMPPass/build/
+
