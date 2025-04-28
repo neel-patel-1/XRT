@@ -1593,6 +1593,115 @@ static inline void demote_buf(char *buf, int size){
 
 }
 
+void baseline_gpcore_mem_ops(fcontext_transfer_t arg){
+  dsa_args_t *args =
+    (dsa_args_t *)arg.data;
+
+  void *src = args->src;
+  void *dst = args->dst;
+  uint64_t xfer_size = args->xfer_size;
+  int p_off = args->p_off;
+  uint64_t ts0, ts1, ts2, ts3, ts4;
+  idxd_desc *desc = args->desc;
+  idxd_comp *comp = args->comp;
+  enum cache_state c_state = args->c_state;
+  if(c_state != CORE_NT){
+    stream_into_cache(src, xfer_size);
+  } else {
+    flush_range(src, xfer_size);
+  }
+  if(c_state == L2_DIRTY){
+    write_to_buf((char *)src, xfer_size);
+  }
+  if(c_state == CORE_NT){
+    int c = 0x41;
+    __m128i i = _mm_set_epi8(c, c, c, c,
+                            c, c, c, c,
+                            c, c, c, c,
+                            c, c, c, c);
+    char *p = (char *)src;
+    for(int j=0; j<xfer_size; j+=64){
+      _mm_stream_si128((__m128i *)&p[j + 0], i);
+      _mm_stream_si128((__m128i *)&p[j + 16], i);
+      _mm_stream_si128((__m128i *)&p[j + 32], i);
+      _mm_stream_si128((__m128i *)&p[j + 48], i);
+    }
+  }
+  if(c_state == LLC || c_state == LLC_DEMOTE){
+    demote_buf((char *)src, xfer_size);
+  }
+  if(c_state == DRAM){
+    flush_range(src, xfer_size);
+  }
+
+#ifdef EXETIME
+  ts0 = rdtsc();
+#endif
+
+  switch(c_state){
+    case L2_DIRTY:
+      break;
+    case L2_CLEAN:
+      break;
+    case LLC:
+      break;
+    case DRAM:
+      break;
+    case L2_DIRTY_DEMOTE:
+      demote_buf((char *)src, xfer_size);
+      break;
+    case L2_CLEAN_DEMOTE:
+      demote_buf((char *)src, xfer_size);
+      break;
+    case LLC_DEMOTE:
+      demote_buf((char *)src, xfer_size);
+      break;
+    case DRAM_DEMOTE:
+      demote_buf((char *)src, xfer_size);
+      break;
+    case CORE_NT:
+      break;
+    default:
+      LOG_PRINT(LOG_ERR, "Invalid cache state\n");
+      return;
+  }
+
+#ifdef EXETIME
+  ts1 = rdtsc();
+#endif
+#ifdef EXETIME
+  ts2 = rdtsc();
+#endif
+
+  switch(args->opcode){
+    case DSA_OPCODE_MEMMOVE:
+      memcpy(dst, src, xfer_size);
+      break;
+    case DSA_OPCODE_MEMFILL:
+      memset(dst, 0xdeadbeef, xfer_size);
+      break;
+    default:
+      LOG_PRINT(LOG_ERR, "Invalid DSA opcode\n");
+      return;
+  }
+#ifdef EXETIME
+  ts3 = rdtsc();
+#endif
+#ifdef EXETIME
+  ts4 = rdtsc();
+#endif
+
+#ifdef EXETIME
+  *args->ts0 = ts0;
+  *args->ts1 = ts1;
+  *args->ts2 = ts2;
+  *args->ts3 = ts3;
+  *args->ts4 = ts4;
+#endif
+
+  fcontext_swap(arg.prev_context, NULL);
+}
+
 void dsa_offload(fcontext_transfer_t arg){
   dsa_args_t *args =
     (dsa_args_t *)arg.data;
@@ -1721,6 +1830,101 @@ void dsa_offload(fcontext_transfer_t arg){
   fcontext_swap(arg.prev_context, NULL);
 }
 
+void baseline_gpcore_decompress(fcontext_transfer_t arg){
+  iaa_args_t *args =
+    (iaa_args_t *)arg.data;
+
+  void *src = args->src;
+  void *dst = args->dst;
+  uint64_t xfer_size = args->xfer_size;
+  int p_off = args->p_off;
+  uint64_t ts0, ts1, ts2, ts3, ts4;
+  idxd_desc *desc = args->desc;
+  idxd_comp *comp = args->comp;
+  enum cache_state c_state = args->c_state;
+
+  /* decompress and recompress into the input in case to preserve and dirty the data */
+  void *dirty_state_temp_decomp_buf;
+  uLong d_out_spc = IAA_DECOMPRESS_MAX_DEST_SIZE;
+  int avail_comp_out = xfer_size;
+
+  stream_into_cache(src, xfer_size);
+
+  if(c_state == L2_DIRTY || c_state == LLC){
+    dirty_state_temp_decomp_buf = (void *)malloc(IAA_DECOMPRESS_MAX_DEST_SIZE);
+      gpcore_do_decompress(
+        dirty_state_temp_decomp_buf,
+        (char *)src, xfer_size, &d_out_spc
+      );
+      gpcore_do_compress((char *)src, dirty_state_temp_decomp_buf,
+        d_out_spc, &avail_comp_out);
+      if(avail_comp_out != xfer_size){
+        LOG_PRINT(LOG_ERR, "Compression failed\n");
+        return;
+      }
+      d_out_spc = IAA_DECOMPRESS_MAX_DEST_SIZE; // reset for next use
+  }
+
+#ifdef EXETIME
+  ts0 = rdtsc();
+#endif
+
+  switch(c_state){
+    case L2_DIRTY:
+      break;
+    case L2_CLEAN:
+      break;
+    case LLC:
+      demote_buf((char *)src, xfer_size);
+      break;
+    case DRAM:
+      flush_range(src, xfer_size);
+      break;
+    default:
+      LOG_PRINT(LOG_ERR, "Invalid cache state\n");
+      return;
+  }
+
+#ifdef EXETIME
+  ts1 = rdtsc();
+#endif
+#ifdef EXETIME
+  ts2 = rdtsc();
+#endif
+
+  switch(args->opcode){
+    case IAX_OPCODE_DECOMPRESS:
+      gpcore_do_decompress(
+        dst,
+        (char *)src, xfer_size, &d_out_spc
+      );
+      break;
+    case IAX_OPCODE_EXTRACT:
+      LOG_PRINT(LOG_ERR, "Extract operation not supported in baseline\n");
+      break;
+    default:
+      LOG_PRINT(LOG_ERR, "Invalid IAA opcode\n");
+      return;
+  }
+
+#ifdef EXETIME
+  ts3 = rdtsc();
+#endif
+
+#ifdef EXETIME
+  ts4 = rdtsc();
+#endif
+
+#ifdef EXETIME
+  *args->ts0 = ts0;
+  *args->ts1 = ts1;
+  *args->ts2 = ts2;
+  *args->ts3 = ts3;
+  *args->ts4 = ts4;
+#endif
+
+  fcontext_swap(arg.prev_context, NULL);
+}
 void iaa_offload(fcontext_transfer_t arg){
   iaa_args_t *args =
     (iaa_args_t *)arg.data;
@@ -3284,7 +3488,7 @@ int main(int argc, char **argv){
   // goto baseline;
   if(neither){
     return 0;
-  } else if(just_blocking){
+  } else if(just_blocking && !just_blocking){
     goto blocking;
   }
 
@@ -3361,6 +3565,16 @@ int main(int argc, char **argv){
           make_fcontext(stack_top,
                         stack_size, update_filter_histogram_baseline);
         break;
+      case DSA_OFFLOAD:
+        state->context =
+          make_fcontext(stack_top,
+                        stack_size, baseline_gpcore_mem_ops);
+        break;
+      case IAA_OFFLOAD:
+        state->context =
+          make_fcontext(stack_top,
+                        stack_size, baseline_gpcore_decompress);
+        break;
       default:
         break;
     }
@@ -3425,6 +3639,16 @@ int main(int argc, char **argv){
       arg_len = sizeof(ufh_args_t);
       m_args = (char *)upd_args;
       break;
+    case DSA_OFFLOAD:
+      m_rq_fn = baseline_gpcore_mem_ops;
+      arg_len = sizeof(dsa_args_t);
+      m_args = (char *)dsa_args;
+      break;
+    case IAA_OFFLOAD:
+      m_rq_fn = baseline_gpcore_decompress;
+      arg_len = sizeof(iaa_args_t);
+      m_args = (char *)iaa_args;
+      break;
     default:
       break;
   }
@@ -3484,15 +3708,15 @@ int main(int argc, char **argv){
 
   avg_samples_from_arrays(diff, post_proc_times, ts4, ts3, total_requests);
   PRINT( " %lu\n", post_proc_times);
+
   #endif
+  if(just_baseline && !just_blocking){
+    return 0;
+  }
 
   /* blocking */
 blocking:
-PRINT("Blocking\n");
 
-if(just_baseline){
-  return 0;
-}
 
   memset(comp, 0, total_requests * sizeof(idxd_comp));
   memset(desc, 0, total_requests * sizeof(idxd_desc));
@@ -3700,7 +3924,7 @@ if(just_baseline){
     PRINT("%lu %d %s %lu\n", payload_size, j, "Block&Wait", avg);
   }
   #endif
-  if (main_type == IAA_OFFLOAD || main_type == DSA_OFFLOAD) {
+  if (just_blocking) {
     return 0;
   }
 
