@@ -1,4 +1,4 @@
-### Fig 3 Execution Time Breakdown of Three Phase Workloads Accelerated/Unaccelerated
+### Fig 4 Data Placement Impact on Accelerable Function
 
 ```sh
 # from root of repo
