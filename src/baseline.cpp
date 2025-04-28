@@ -3488,6 +3488,7 @@ int main(int argc, char **argv){
 
   /* blocking */
 blocking:
+PRINT("Blocking\n");
 
 if(just_baseline){
   return 0;
@@ -3622,16 +3623,14 @@ if(just_baseline){
       m_args = (char *)dmdp_args;
       break;
     case IAA_OFFLOAD:
-      for(i=0; i<total_requests; i++){
-        state = (fcontext_state_t *)(&stack_ctxs[i * context_size]);
-        fcontext_transfer_t child =  fcontext_swap(state->context, (void *)&iaa_args[i]);
-      }
+      m_rq_fn = iaa_offload;
+      arg_len = sizeof(iaa_args_t);
+      m_args = (char *)iaa_args;
       break;
     case DSA_OFFLOAD:
-      for(i=0; i<total_requests; i++){
-        state = (fcontext_state_t *)(&stack_ctxs[i * context_size]);
-        fcontext_transfer_t child =  fcontext_swap(state->context, (void *)&dsa_args[i]);
-      }
+      m_rq_fn = dsa_offload;
+      arg_len = sizeof(dsa_args_t);
+      m_args = (char *)dsa_args;
       break;
     case MATMUL_MEMFILL_PCA:
       m_rq_fn = matmul_memfill_pca_blocking;
@@ -3701,6 +3700,9 @@ if(just_baseline){
     PRINT("%lu %d %s %lu\n", payload_size, j, "Block&Wait", avg);
   }
   #endif
+  if (main_type == IAA_OFFLOAD || main_type == DSA_OFFLOAD) {
+    return 0;
+  }
 
 
   /* yeidling */
