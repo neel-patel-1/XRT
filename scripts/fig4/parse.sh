@@ -49,3 +49,24 @@ do
     grep Block $i;
   done | awk '{printf("%s ", $5);} END{printf( "\n")}'
 done
+
+echo ""
+echo "gpcore decompress"
+echo "L2D L2C LLC DRAM"
+for j in "${PAYLOAD_SIZES[@]}"
+do
+  for i in logs/placement_iaa_66_${j}_cstate_*;
+  do
+    grep Baseline $i;
+  done | awk '{printf("%s ", $5);} END{printf( "\n")}'
+done
+
+echo ""
+echo "iaa decompress"
+for j in "${PAYLOAD_SIZES[@]}"
+do
+  for i in logs/placement_iaa_66_${j}_cstate_*;
+  do
+    grep Block $i;
+  done | awk '{printf("%s ", $5);} END{printf( "\n")}'
+done

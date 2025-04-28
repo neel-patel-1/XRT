@@ -32,3 +32,18 @@ do
     done
   done
 done
+
+for opcode in "${iaa_opcodes[@]}";
+do
+  prefix="logs/placement_iaa_${opcode}"
+  for query_size in "${PAYLOAD_SIZES[@]}";
+  do
+    for cstate in "${PLACEMENTS[@]}";
+    do
+      log="${prefix}_${query_size}_cstate_${cstate}.log"
+      sudo \
+        ./$bin -i 1 -t 100 -a $iaa_app -o $opcode -s $query_size -l -2 -p $cstate -q -j \
+        | tee ${log}
+    done
+  done
+done
