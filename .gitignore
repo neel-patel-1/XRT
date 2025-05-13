@@ -23,3 +23,8 @@ ufh
 
 src/XMPPass/build/
 
+RACER.code-workspace
+exe_time
+numa_effect
+throughput
+
