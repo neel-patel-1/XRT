@@ -17,13 +17,13 @@
 ./build_all.sh
 ```
 
-* Configure IAA && DSA, download packages dependencies, and activate python environment
+### Figure generation
+* The following instructions detail how to generate and view the figures from the paper
+
+* First, activate the python environment
 ```sh
 source ./scripts/setup.sh
 ```
-
-### Figure generation
-* The following instructions detail how to generate and view the figures from the paper
 
 ### Figure 3
 * Below loads a worker-centric system and a dispatcher-centric system running the deserialize-decompress-hash workload. Then plots the resulting slowdown in `worker_vs_dispatcher.png`

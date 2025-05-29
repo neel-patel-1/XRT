@@ -20,21 +20,26 @@ def read_table(path: Path) -> pd.DataFrame:
 def plot_overhead(df: pd.DataFrame, metric: str, outfile: Path):
     """Plot overhead vs load for the chosen metric.
 
-    Overhead is computed **relative to the first row of the same metric**
+    Overhead is computed as percent of original request spent on enqueueing
     (baseline), column‑wise:
-        overhead[%] = (value / baseline_value - 1) * 100
+        overhead[%] = (enqueue time / unloaded request latency) * 100
     """
     sub = df[df["Name"] == metric].copy().reset_index(drop=True)
+    sub = df[df["Name"] == metric].copy().reset_index(drop=True)
     if sub.empty:
-        raise ValueError(f"Metric '{metric}' not found in the input file.")
+         raise ValueError(f"Metric '{metric}' not found in the input file.")
 
-    # Row 0 of this metric is the baseline
-    baseline = sub.loc[0, ["NoAcc", "Block&Wait", "RR"]]
+    # Use the first RR value from AvgRequestTime as the global baseline
+    req = df[df["Name"] == "AvgRequestTime"].reset_index(drop=True)
+    if req.empty:
+        raise ValueError("AvgRequestTime metric not found; cannot compute baseline.")
+    baseline = req.loc[0, "RR"]
+
 
     # Compute column‑wise overhead (skip columns whose baseline is 0)
     for col in ["Block&Wait", "RR", "NoAcc"]:
-        if baseline[col] != 0:
-            sub[col + "_ovr"] = (sub[col] / baseline[col] - 1.0) * 2
+        if baseline != 0:
+            sub[col + "_ovr"] = (sub[col] / baseline) * 100
         else:
             # Undefined overhead when baseline is 0; set to NaN so it doesn't plot
             sub[col + "_ovr"] = float('nan')
